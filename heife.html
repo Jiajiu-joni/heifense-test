@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>十家公司销售额｜黑粉网状互动版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/echarts@6/dist/echarts.min.js"></script>
+<style>
+:root{
+  --bg:#09070b;
+  --panel:#151017;
+  --panel-raised:#1d151e;
+  --ink:#fff4fa;
+  --muted:#c4b5bf;
+  --quiet:#a08c9a;
+  --grid:#382632;
+  --pink:#ff4f9a;
+  --pink-bright:#ff83b8;
+  --pink-mid:#ca477c;
+  --pink-low:#aa4c77;
+  --pink-soft:#f1b6d0;
+  --unknown:#988c98;
+  --edge:#a44771;
+  --radius:24px;
+  --font:Inter,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --num:Inter,"SF Pro Display","Arial",sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg);color:var(--ink);font-family:var(--font);scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+.wrap{width:min(1440px,100%);margin:0 auto;padding:42px clamp(18px,4.4vw,68px) 34px}
+.eyebrow{display:flex;align-items:center;gap:10px;color:var(--pink-bright);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.eyebrow-mark{width:8px;height:8px;border-radius:50%;background:var(--pink)}
+.hero{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(250px,.55fr);gap:34px;align-items:end;margin:22px 0 24px}
+h1{margin:0;max-width:900px;font-size:clamp(34px,5vw,66px);line-height:1.04;letter-spacing:-.055em;font-weight:800}
+h1 .accent{color:var(--pink)}
+.deck{max-width:760px;margin:16px 0 0;color:var(--muted);font-size:13px;line-height:1.85}
+.hero-note{align-self:end;border-left:2px solid var(--pink);padding:5px 0 5px 16px;color:var(--muted);font-size:11px;line-height:1.8}
+.hero-note strong{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
+.kpi{min-height:112px;background:var(--panel);border-radius:var(--radius);padding:18px 20px 16px;display:flex;flex-direction:column;justify-content:space-between}
+.kpi-label{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.08em}
+.kpi-value{font-family:var(--num);font-size:clamp(25px,3vw,36px);line-height:1.1;font-weight:800;letter-spacing:-.045em;color:var(--pink);font-variant-numeric:tabular-nums}
+.kpi-value small{font-family:var(--font);font-size:11px;letter-spacing:0;color:var(--muted);font-weight:600;margin-left:5px}
+.kpi-caption{margin-top:7px;color:var(--muted);font-size:10px;line-height:1.5}
+.panel{background:var(--panel);border-radius:var(--radius);padding:clamp(18px,2.5vw,32px)}
+.panel-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:10px}
+.panel-title{margin:0;font-size:clamp(19px,2vw,25px);line-height:1.25;letter-spacing:-.03em;font-weight:800}
+.panel-sub{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.8;max-width:850px}
+.replay{flex:0 0 auto;min-height:44px;border:1px solid var(--grid);border-radius:999px;background:var(--panel-raised);color:var(--pink-bright);padding:10px 15px;font-size:11px;font-weight:800;cursor:pointer;transition:background .2s ease,border-color .2s ease,transform .2s ease}
+.replay:hover{background:#2a1724;border-color:var(--pink-mid);transform:translateY(-1px)}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--pink-bright);outline-offset:3px}
+.legend{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin:8px 0 3px;color:var(--muted);font-size:10px;line-height:1.6}
+.legend-item{display:inline-flex;align-items:center;gap:7px}
+.legend-dot{width:10px;height:10px;border-radius:50%;background:var(--pink);border:1px solid var(--ink);flex:0 0 auto}
+.legend-dot.mid{background:var(--pink-mid)}
+.legend-dot.low{background:var(--pink-low)}
+.legend-dot.negative{background:var(--pink-soft)}
+.legend-dot.missing{background:var(--unknown)}
+.legend-line{width:20px;height:0;border-top:2px solid var(--pink-mid);flex:0 0 auto}
+.legend-line.dashed{border-top-style:dashed}
+.graph-wrap{position:relative;margin:10px 0 0;border:1px solid #2d202c;border-radius:20px;background:#0c090e;overflow:hidden}
+#network{width:100%;height:540px;cursor:grab;touch-action:none}
+#network:active{cursor:grabbing}
+.graph-corner{position:absolute;left:16px;top:14px;z-index:2;pointer-events:none;color:var(--quiet);font-size:9px;font-weight:800;letter-spacing:.15em}
+.graph-foot{display:flex;justify-content:space-between;gap:12px;margin:11px 4px 0;color:var(--muted);font-size:10px;line-height:1.7}
+.detail-card{margin-top:13px;padding:17px 19px;background:var(--panel-raised);border:1px solid #322433;border-radius:18px;display:grid;grid-template-columns:minmax(175px,.8fr) repeat(3,minmax(110px,1fr));gap:16px;align-items:center;min-height:82px}
+.detail-kicker{color:var(--pink-bright);font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.detail-company{margin-top:5px;font-size:15px;font-weight:800}
+.detail-metric span{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}
+.detail-metric strong{font-family:var(--num);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.insight{margin-top:13px;display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.insight-card{padding:19px 21px;background:var(--panel);border-radius:var(--radius)}
+.insight-label{color:var(--pink-bright);font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.insight-card p{margin:8px 0 0;font-size:12px;line-height:1.8;color:var(--muted)}
+.insight-card strong{color:var(--ink)}
+details{margin-top:13px;background:var(--panel);border-radius:18px;padding:15px 19px}
+summary{cursor:pointer;color:var(--pink-bright);font-size:11px;font-weight:800}
+.table-wrap{overflow:auto;margin-top:11px}
+table{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
+th,td{padding:9px 11px;border-bottom:1px solid #2b202b;text-align:left}
+th{color:var(--muted);font-size:9px;letter-spacing:.05em}
+td.num{text-align:right;font-family:var(--num);font-variant-numeric:tabular-nums}
+footer{padding:21px 4px 0;color:var(--muted);font-size:10px;line-height:1.9}
+footer strong{color:var(--ink)}
+@media(max-width:900px){
+  .wrap{padding-top:30px}
+  .hero{grid-template-columns:1fr;gap:14px}
+  .hero-note{max-width:650px}
+  #network{height:500px}
+}
+@media(max-width:680px){
+  .wrap{padding:23px 14px 24px}
+  .hero{margin:17px 0 18px}
+  .deck{font-size:12px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .kpi{min-height:100px;padding:14px}
+  .panel{padding:17px 12px;border-radius:20px}
+  .panel-top{display:block;margin:0 4px 8px}
+  .replay{margin-top:10px}
+  .legend{gap:7px 11px;font-size:9px}
+  .graph-wrap{border-radius:16px}
+  #network{height:460px}
+  .graph-corner{left:12px;top:12px;font-size:8px}
+  .graph-foot{display:block;margin:9px 3px 0}
+  .detail-card{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px}
+  .detail-primary{grid-column:1/-1}
+  .detail-metric strong{font-size:12px}
+  .insight{grid-template-columns:1fr;gap:8px}
+  .insight-card{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="eyebrow"><span class="eyebrow-mark"></span> SALES NETWORK · GROWTH SIGNAL</div>
+  <section class="hero" aria-labelledby="page-title">
+    <div>
+      <h1 id="page-title">十家公司，<br><span class="accent">在销售网络里</span>找到彼此</h1>
+      <p class="deck">圆形面积代表销售额，同比表现由节点粉色深浅表达。鼠标悬停可看数据、拖动节点可重排网络、点击节点可锁定详情。</p>
+    </div>
+    <div class="hero-note"><strong>先看结论</strong>前三家占本表销售额的 63.2%；网线表示已披露数据的相似度，不代表公司之间存在业务合作或关联。</div>
+  </section>
+
+  <section class="kpis" aria-label="关键数据">
+    <article class="kpi"><div class="kpi-label">榜单销售额合计</div><div class="kpi-value">5,435.57<small>亿元</small></div><div class="kpi-caption">仅对表中 10 家企业求和</div></article>
+    <article class="kpi"><div class="kpi-label">前三名占比</div><div class="kpi-value">63.2<small>%</small></div><div class="kpi-caption">欧莱雅、联合利华、宝洁</div></article>
+    <article class="kpi"><div class="kpi-label">已披露同比</div><div class="kpi-value">7 / 8<small>为正增长</small></div><div class="kpi-caption">另有 2 家原表未提供同比</div></article>
+    <article class="kpi"><div class="kpi-label">最大 / 第二名</div><div class="kpi-value">1.79<small>倍</small></div><div class="kpi-caption">欧莱雅 ÷ 联合利华</div></article>
+  </section>
+
+  <section class="panel" aria-labelledby="chart-title">
+    <div class="panel-top">
+      <div>
+        <h2 class="panel-title" id="chart-title">规模与增长相近，连成一张网</h2>
+        <p class="panel-sub">线越粗，两家公司已披露的销售额与同比表现越接近；节点面积 ∝ 销售额；节点颜色表示同比。同比缺失的配对只按销售额比较，不把空值当 0。</p>
+      </div>
+      <button class="replay" id="replay" type="button" aria-label="重置并重新播放网络布局">↻ 重置网络</button>
+    </div>
+    <div class="legend" aria-label="图例">
+      <span class="legend-item"><i class="legend-dot low"></i>较低正增长</span>
+      <span class="legend-item"><i class="legend-dot mid"></i>中等正增长</span>
+      <span class="legend-item"><i class="legend-dot"></i>较高正增长</span>
+      <span class="legend-item"><i class="legend-dot negative"></i>负增长</span>
+      <span class="legend-item"><i class="legend-dot missing"></i>未披露</span>
+      <span class="legend-item"><i class="legend-line"></i>相似度连线</span>
+      <span class="legend-item"><i class="legend-line dashed"></i>同比缺失配对（仅比销售额）</span>
+    </div>
+    <div class="graph-wrap">
+      <div class="graph-corner">10 COMPANIES · FORCE NETWORK</div>
+      <div id="network" role="img" aria-label="十家公司销售额与同比特征相似网络。节点面积表示销售额，节点颜色表示同比；连线不代表商业合作关系。可拖动节点、缩放并点击查看详情。"></div>
+    </div>
+    <div class="graph-foot"><span>悬停看数 · 拖拽重排 · 滚轮缩放 · 点击锁定详情</span><span>白色描边 = 销售额前三名</span></div>
+    <div class="detail-card" id="detail-card" aria-live="polite">
+      <div class="detail-primary"><div class="detail-kicker" id="detail-kicker">DETAIL · HOVER OR SELECT</div><div class="detail-company" id="detail-company">悬停或点击任一公司节点</div></div>
+      <div class="detail-metric"><span>销售额占本表</span><strong id="detail-share">—</strong></div>
+      <div class="detail-metric"><span>销售额</span><strong id="detail-sales">—</strong></div>
+      <div class="detail-metric"><span>同比增幅</span><strong id="detail-growth">—</strong></div>
+    </div>
+  </section>
+
+  <section class="insight" aria-label="补充观察">
+    <article class="insight-card"><div class="insight-label">CONCENTRATION</div><p>前 3 家合计 <strong>3,436.84 亿元</strong>，占本表 10 家销售额合计 <strong>63.2%</strong>。欧莱雅领先第二名 <strong>822.17 亿元</strong>。</p></article>
+    <article class="insight-card"><div class="insight-label">GROWTH RANGE</div><p>已披露同比中，最高为宝洁 <strong>+8.56%</strong>；拜尔斯道夫为 <strong>−5.00%</strong>。LVMH 与科蒂的同比在原表中为“−”，按未披露展示。</p></article>
+  </section>
+
+  <details>
+    <summary>展开核对原表数据（10 家）</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>排名</th><th>公司</th><th>销售额（亿元）</th><th>同比增幅</th></tr></thead>
+        <tbody id="source-table"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <footer>
+    <strong>来源：</strong>表格_20261008.xlsx · 工作表「工作表 1 - 表格_20261008」。工作簿未注明统计年度与数据来源；同比“−”按未披露处理。销售额合计与前三名占比仅基于本表 10 家计算。<br>
+    <strong>图表说明：</strong>黑粉 custom 色系；节点面积编码销售额，粉色明度编码正增长强弱，浅粉表示负增长，灰色表示未披露。每家公司连接 3 个最近邻；连线按可比较的销售额和同比特征生成，仅表示数据相似度，不表示商业关系。同比缺失时只比销售额，不将空值当作 0。页面使用 ECharts 与在线字体，打开网页需联网。
+  </footer>
+</main>
+<script>
+'use strict';
+// 图表选型记录：比较 F8 Plumb Scatter（两项连续指标读数准确，但缺少用户要求的网状互动）、
+// L6 Cluster Field（中心-卫星网络视觉强，但静态且无真实中心关系）、G11 Force Graph（小）（10 节点可拖、适配小网络）。
+// 采用 glance-gallery.html 中 G11「Integrations, pulled into orbit」的 ECharts force graph 骨架。
+// 真实表格没有公司间关系，所以 link 由已披露的销售额/同比特征相似度派生，并明确说明不代表业务关联。
+const CUSTOM={
+  BG:'#09070b',PANEL:'#151017',TXT:'#fff4fa',MUT:'#c4b5bf',GRID:'#382632',
+  PINK:'#ff4f9a',RAMP:['#aa4c77','#ca477c','#ff4f9a'],NEG:'#f1b6d0',MISSING:'#988c98',EDGE:'#a44771',HERO:'#fff4fa'
+};
+const DATA=[
+  {rank:1,name:'欧莱雅',sales:1865.96,yoy:0.058},
+  {rank:2,name:'联合利华',sales:1043.79,yoy:0.023},
+  {rank:3,name:'宝洁',sales:527.09,yoy:0.0856},
+  {rank:4,name:'雅诗兰黛',sales:493.34,yoy:0.0543},
+  {rank:5,name:'拜尔斯道夫',sales:322.79,yoy:-0.05},
+  {rank:6,name:'科赴',sales:307.61,yoy:0.0039},
+  {rank:7,name:'LVMH',sales:307.17,yoy:null},
+  {rank:8,name:'资生堂',sales:211.6,yoy:0.062},
+  {rank:9,name:'Puig',sales:184.74,yoy:0.024},
+  {rank:10,name:'科蒂',sales:171.48,yoy:null}
+];
+const TOTAL=DATA.reduce((sum,d)=>sum+d.sales,0);
+const MAX_SALES=Math.max(...DATA.map(d=>d.sales));
+const $=s=>document.querySelector(s);
+const fmtSales=n=>new Intl.NumberFormat('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const fmtPct=v=>v===null?'未披露':`${v>0?'+':v<0?'−':''}${Math.abs(v*100).toFixed(2)}%`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let chart=null,selectedName=null;
+
+function growthColor(d){
+  if(d.yoy===null)return CUSTOM.MISSING;
+  if(d.yoy<0)return CUSTOM.NEG;
+  if(d.yoy<0.02)return CUSTOM.RAMP[0];
+  if(d.yoy<0.05)return CUSTOM.RAMP[1];
+  return CUSTOM.RAMP[2];
+}
+function buildLinks(){
+  const pairs=new Map();
+  const logSales=DATA.map(d=>Math.log(d.sales));
+  const minLog=Math.min(...logSales),salesSpan=Math.max(...logSales)-minLog;
+  const disclosed=DATA.filter(d=>d.yoy!==null).map(d=>d.yoy);
+  const minGrowth=Math.min(...disclosed),growthSpan=Math.max(...disclosed)-minGrowth;
+  const normalized=new Map(DATA.map((d,i)=>[d.name,{
+    sales:(logSales[i]-minLog)/salesSpan,
+    growth:d.yoy===null?null:(d.yoy-minGrowth)/growthSpan
+  }]));
+  const gapBetween=(a,b)=>{
+    const x=normalized.get(a.name),y=normalized.get(b.name);
+    const salesGap=Math.abs(x.sales-y.sales);
+    if(x.growth===null||y.growth===null)return salesGap;
+    const growthGap=Math.abs(x.growth-y.growth);
+    return Math.sqrt((salesGap*salesGap+growthGap*growthGap)/2);
+  };
+  DATA.forEach(a=>{
+    const nearest=DATA.filter(b=>b.name!==a.name)
+      .map(b=>({b,gap:gapBetween(a,b)}))
+      .sort((x,y)=>x.gap-y.gap||x.b.rank-y.b.rank).slice(0,3);
+    nearest.forEach(({b,gap})=>{
+      const key=[a.name,b.name].sort((x,y)=>x.localeCompare(y,'zh-CN')).join('::');
+      const similarity=Math.max(0,1-gap);
+      const previous=pairs.get(key);
+      if(!previous||similarity>previous.similarity)pairs.set(key,{source:a.name,target:b.name,similarity,missing:a.yoy===null||b.yoy===null});
+    });
+  });
+  return [...pairs.values()].map(edge=>({
+    source:edge.source,target:edge.target,value:edge.similarity,
+    lineStyle:{width:0.9+edge.similarity*1.5,color:edge.similarity>.76?CUSTOM.PINK:CUSTOM.EDGE,opacity:.9,curveness:.06,type:edge.missing?'dashed':'solid'}
+  }));
+}
+const LINKS=buildLinks();
+function nodeColor(d){return growthColor(d)}
+function nodeSize(d,mobile=false){
+  // ECharts symbolSize is diameter; sqrt makes visible circle area proportional to sales.
+  return (mobile?66:76)*Math.sqrt(d.sales/MAX_SALES);
+}
+function nodeOption(d,mobile=false){return{
+  name:d.name,value:d.sales,rank:d.rank,sales:d.sales,yoy:d.yoy,
+  symbolSize:nodeSize(d,mobile),
+  itemStyle:{color:nodeColor(d),borderColor:d.rank<=3?CUSTOM.HERO:'#301a28',borderWidth:d.rank<=3?2.6:1.2},
+  label:{show:!mobile||d.rank<=3,position:'right',distance:7,color:CUSTOM.TXT,fontFamily:'Inter,"PingFang SC",sans-serif',fontSize:mobile?9:11,fontWeight:700},
+  emphasis:{itemStyle:{borderColor:CUSTOM.TXT,borderWidth:2.5},label:{show:true,color:CUSTOM.TXT,fontSize:12,fontWeight:800}}
+}}
+function buildOption(){
+  const mobile=matchMedia('(max-width: 680px)').matches;
+  return{
+    animation:!REDUCED,animationDuration:950,animationEasing:'quarticOut',
+    aria:{enabled:true,description:'十家公司销售额与同比表现的特征相似网络。节点面积表示销售额，节点颜色表示同比，连线表示可比较数据的相似度而非商业合作关系。'},
+    tooltip:{trigger:'item',confine:true,backgroundColor:'#fff4fa',borderWidth:0,padding:[10,13],textStyle:{color:'#1d1018',fontFamily:'Inter,"PingFang SC",sans-serif',fontSize:12},
+      formatter:p=>{
+        if(p.dataType!=='node')return '';
+        const d=DATA.find(x=>x.name===p.data.name);if(!d)return '';
+        return `<div style="font-weight:800;margin-bottom:5px">${esc(d.name)} <span style="font-weight:600;opacity:.72">· 排名 ${d.rank}</span></div><div>销售额：${fmtSales(d.sales)} 亿元</div><div>同比：${fmtPct(d.yoy)}</div><div>占本表：${(d.sales/TOTAL*100).toFixed(2)}%</div>`;
+      }
+    },
+    series:[{
+      type:'graph',layout:'force',
+      force:{initLayout:'circular',repulsion:mobile?160:650,edgeLength:mobile?[60,94]:[140,210],gravity:mobile ? 0.08 : 0.05,friction:.16,layoutAnimation:!REDUCED},
+      roam:true,draggable:true,zoom:1,layoutSize:mobile?'65%':'100%',layoutCenter:['50%','50%'],
+      labelLayout:{hideOverlap:true},
+      left:mobile?24:62,right:mobile?48:126,top:mobile?42:36,bottom:24,
+      data:DATA.map(d=>nodeOption(d,mobile)),links:LINKS,
+      lineStyle:{color:CUSTOM.EDGE,width:1.2,opacity:.9,curveness:.04},
+      emphasis:{focus:'adjacency',lineStyle:{color:CUSTOM.PINK,opacity:.95,width:2.2}},
+      blur:{itemStyle:{opacity:.88},lineStyle:{color:'#704052',opacity:.85,width:.8}},
+      select:{itemStyle:{borderColor:CUSTOM.TXT,borderWidth:3},label:{show:true,color:CUSTOM.TXT,fontSize:11,fontWeight:800}},selectedMode:'single'
+    }]
+  };
+}
+function updateDetail(d,locked=false){
+  if(!d){
+    $('#detail-kicker').textContent='DETAIL · HOVER OR SELECT';
+    $('#detail-company').textContent='悬停或点击任一公司节点';
+    $('#detail-share').textContent='—';$('#detail-sales').textContent='—';$('#detail-growth').textContent='—';return;
+  }
+  $('#detail-kicker').textContent=locked?'PINNED · CLICK ANOTHER NODE TO SWITCH':'DETAIL · LIVE PREVIEW';
+  $('#detail-company').textContent=`${String(d.rank).padStart(2,'0')} · ${d.name}`;
+  $('#detail-share').textContent=`${(d.sales/TOTAL*100).toFixed(2)}%`;
+  $('#detail-sales').textContent=`${fmtSales(d.sales)} 亿元`;
+  $('#detail-growth').textContent=fmtPct(d.yoy);
+}
+function bindEvents(){
+  chart.on('mouseover',p=>{if(p.dataType==='node'&&!selectedName){const d=DATA.find(x=>x.name===p.data.name);updateDetail(d,false)}});
+  chart.on('mouseout',p=>{if(p.dataType==='node'&&!selectedName)updateDetail(null,false)});
+  chart.on('click',p=>{
+    if(p.dataType!=='node')return;
+    selectedName=p.data.name;
+    const d=DATA.find(x=>x.name===selectedName);
+    updateDetail(d,true);
+    chart.dispatchAction({type:'select',seriesIndex:0,dataIndex:p.dataIndex});
+  });
+  chart.getZr().on('click',e=>{
+    if(!e.target){selectedName=null;updateDetail(null);chart.dispatchAction({type:'unselect',seriesIndex:0});}
+  });
+}
+function renderGraph(){
+  const el=$('#network');
+  if(chart)chart.dispose();
+  chart=echarts.init(el,null,{renderer:'canvas'});
+  chart.setOption(buildOption(),{notMerge:true});
+  selectedName=null;updateDetail(null);bindEvents();
+}
+$('#replay').addEventListener('click',renderGraph);
+window.addEventListener('resize',()=>{if(chart){chart.resize();chart.setOption(buildOption(),{notMerge:true})}});
+$('#source-table').innerHTML=DATA.map(d=>`<tr><td class="num">${d.rank}</td><td>${esc(d.name)}</td><td class="num">${fmtSales(d.sales)}</td><td class="num">${fmtPct(d.yoy)}</td></tr>`).join('');
+if(window.echarts){renderGraph()}else{
+  $('#network').innerHTML='<p style="padding:30px;color:#c4b5bf">图表组件加载失败，请联网后刷新页面。</p>';
+}
+</script>
+</body>
+</html>
